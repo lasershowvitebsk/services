@@ -37,8 +37,20 @@
 
     function detectLang() {
         if (CONFIG.lang !== 'auto') return CONFIG.lang === 'en' ? 'en' : 'ru';
+
+        // 1. Пытаемся прочитать язык, выбранный пользователем на сайте (Blazor хранит культуру в localStorage)
+        try {
+            var stored = window.localStorage ? window.localStorage.getItem('culture') : null;
+            if (stored) {
+                return stored.toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en';
+            }
+        } catch (e) {
+            // localStorage может быть недоступен (приватный режим и т.п.) — просто идём дальше
+        }
+
+        // 2. Фолбэк — язык браузера пользователя
         var nav = (navigator.language || 'ru').toLowerCase();
-        return (nav.startsWith('ru') || nav.startsWith('be')) ? 'ru' : 'en';
+        return (nav.indexOf('ru') === 0 || nav.indexOf('be') === 0) ? 'ru' : 'en';
     }
 
     function formatMessage(text) {
