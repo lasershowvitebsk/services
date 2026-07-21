@@ -49,24 +49,47 @@
         }
 
         .demo-panel {
-            width: min(820px, 100%);
-            padding: 20px;
+            width: min(920px, 100%);
+            padding: 22px;
             border-radius: 18px;
             background: rgba(255,255,255,.05);
             border: 1px solid rgba(255,255,255,.08);
+            box-shadow: 0 16px 45px rgba(0,0,0,.18);
         }
 
         .demo-panel h2 {
-            margin-bottom: 14px;
+            margin-bottom: 18px;
             color: #fff;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             text-align: center;
+        }
+
+        .demo-section {
+            margin-bottom: 20px;
+        }
+
+        .demo-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .demo-section-title {
+            margin-bottom: 10px;
+            color: #bfc8da;
+            font-size: .88rem;
+            font-weight: 600;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: .04em;
         }
 
         .demo-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
             gap: 10px;
+        }
+
+        .demo-grid.small {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         }
 
         .demo-btn {
@@ -77,17 +100,101 @@
             color: #e0e0e0;
             cursor: pointer;
             font-size: .9rem;
-            transition: background .18s, transform .12s;
+            transition: background .18s, transform .12s, border-color .18s;
         }
 
         .demo-btn:hover {
             background: rgba(13,110,253,.35);
+            border-color: rgba(13,110,253,.85);
+            transform: translateY(-1px);
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .color-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,.12);
+            background: rgba(255,255,255,.045);
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: .9rem;
+            transition: background .18s, transform .12s, border-color .18s;
+        }
+
+        .color-btn:hover {
+            background: rgba(255,255,255,.085);
+            border-color: rgba(255,255,255,.22);
+            transform: translateY(-1px);
+        }
+
+        .swatch {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            box-shadow: 0 0 12px currentColor;
+            flex-shrink: 0;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 10px;
+        }
+
+        .icon-btn {
+            padding: 9px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(13,110,253,.5);
+            background: rgba(13,110,253,.15);
+            color: #fff;
+            cursor: pointer;
+            font-size: 1.15rem;
+            transition: background .18s, transform .12s, border-color .18s;
+        }
+
+        .icon-btn:hover {
+            background: rgba(13,110,253,.35);
+            border-color: rgba(13,110,253,.85);
             transform: translateY(-1px);
         }
 
         .demo-note {
             font-size: .9rem;
             color: #777;
+        }
+
+        @media (max-width: 576px) {
+            body {
+                justify-content: flex-start;
+                padding-top: 36px;
+            }
+
+            h1 {
+                font-size: 1.55rem;
+            }
+
+            .demo-panel {
+                padding: 18px;
+            }
+
+            .demo-grid,
+            .demo-grid.small,
+            .color-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .icon-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
     </style>
 </head>
@@ -96,70 +203,170 @@
     <h1>💡 LaserShow Widget — Демо</h1>
 
     <p>
-        Виджет настраивается через объект <code>window.LaserChatConfig</code>.
-        Можно менять положение, цвет, отступы, размеры, активность, тексты и поведение.
+        Можно выбрать положение, отступ, цвет, размер, иконку и поведение.
     </p>
 
     <div class="demo-panel">
-        <h2>Быстрая проверка положения и отступов</h2>
+        <h2>Настройка внешнего вида виджета</h2>
 
-        <div class="demo-grid">
-            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'bottom-right' })">
-                Снизу справа
-            </button>
+        <div class="demo-section">
+            <div class="demo-section-title">Положение на экране</div>
 
-            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'bottom-left' })">
-                Снизу слева
-            </button>
+            <div class="demo-grid">
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'bottom-right' })">
+                    Снизу справа
+                </button>
 
-            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'top-right' })">
-                Сверху справа
-            </button>
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'bottom-left' })">
+                    Снизу слева
+                </button>
 
-            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'top-left' })">
-                Сверху слева
-            </button>
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'top-right' })">
+                    Сверху справа
+                </button>
 
-            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ offsetX: '8px', offsetY: '8px' })">
-                Отступ 8px
-            </button>
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'top-left' })">
+                    Сверху слева
+                </button>
+            </div>
+        </div>
 
-            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ offsetX: '24px', offsetY: '24px' })">
-                Отступ 24px
-            </button>
+        <div class="demo-section">
+            <div class="demo-section-title">Отступ от края</div>
 
-            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ offsetX: '24px', offsetY: '110px' })">
-                Поднять выше
-            </button>
+            <div class="demo-grid small">
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ offsetX: '10px', offsetY: '10px' })">
+                    Отступ 10px
+                </button>
 
-            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ accentColor: '#ff3b30', colors: { accent: '#ff3b30', toggleBg: '#ff3b30', headerBg: '#ff3b30', userMessageBg: '#ff3b30' } })">
-                Красный цвет
-            </button>
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ offsetX: '25px', offsetY: '25px' })">
+                    Отступ 25px
+                </button>
+            </div>
+        </div>
 
-            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ accentColor: '#0d6efd', colors: { accent: '#0d6efd', toggleBg: '#0d6efd', headerBg: '#0d6efd', userMessageBg: '#0d6efd' } })">
-                Синий цвет
-            </button>
+        <div class="demo-section">
+            <div class="demo-section-title">Основной цвет</div>
 
-            <button class="demo-btn" onclick="LaserChatWidget.open()">
-                Открыть чат
-            </button>
+            <div class="color-grid">
+                <button class="color-btn" onclick="setWidgetAccent('#0d6efd')">
+                    <span class="swatch" style="background:#0d6efd;color:#0d6efd;"></span>
+                    Синий
+                </button>
 
-            <button class="demo-btn" onclick="LaserChatWidget.close()">
-                Закрыть чат
-            </button>
+                <button class="color-btn" onclick="setWidgetAccent('#ff3b30')">
+                    <span class="swatch" style="background:#ff3b30;color:#ff3b30;"></span>
+                    Красный
+                </button>
 
-            <button class="demo-btn" onclick="LaserChatWidget.disable()">
-                Выключить
-            </button>
+                <button class="color-btn" onclick="setWidgetAccent('#22c55e')">
+                    <span class="swatch" style="background:#22c55e;color:#22c55e;"></span>
+                    Зелёный
+                </button>
 
-            <button class="demo-btn" onclick="LaserChatWidget.enable()">
-                Включить
-            </button>
+                <button class="color-btn" onclick="setWidgetAccent('#a855f7')">
+                    <span class="swatch" style="background:#a855f7;color:#a855f7;"></span>
+                    Фиолетовый
+                </button>
+
+                <button class="color-btn" onclick="setWidgetAccent('#06b6d4')">
+                    <span class="swatch" style="background:#06b6d4;color:#06b6d4;"></span>
+                    Бирюзовый
+                </button>
+
+                <button class="color-btn" onclick="setWidgetAccent('#f97316')">
+                    <span class="swatch" style="background:#f97316;color:#f97316;"></span>
+                    Оранжевый
+                </button>
+
+                <button class="color-btn" onclick="setWidgetAccent('#ec4899')">
+                    <span class="swatch" style="background:#ec4899;color:#ec4899;"></span>
+                    Розовый
+                </button>
+
+                <button class="color-btn" onclick="setWidgetAccent('#eab308')">
+                    <span class="swatch" style="background:#eab308;color:#eab308;"></span>
+                    Жёлтый
+                </button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-section-title">Размер кнопки</div>
+
+            <div class="demo-grid small">
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ buttonSize: '46px' })">
+                    Маленькая
+                </button>
+
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ buttonSize: '58px' })">
+                    Стандартная
+                </button>
+
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ buttonSize: '70px' })">
+                    Большая
+                </button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-section-title">Размер окна чата</div>
+
+            <div class="demo-grid small">
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ windowWidth: '320px' })">
+                    Компактное
+                </button>
+
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ windowWidth: '360px' })">
+                    Стандартное
+                </button>
+
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ windowWidth: '420px' })">
+                    Широкое
+                </button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-section-title">Поведение</div>
+
+            <div class="demo-grid">
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ animation: true })">
+                    Анимация включена
+                </button>
+
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ animation: false })">
+                    Анимация выключена
+                </button>
+
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ showChips: true })">
+                    Быстрые кнопки включены
+                </button>
+
+                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ showChips: false })">
+                    Быстрые кнопки выключены
+                </button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-section-title">Иконка кнопки</div>
+
+            <div class="icon-grid">
+                <button class="icon-btn" onclick="setWidgetIcon('💬')">💬</button>
+                <button class="icon-btn" onclick="setWidgetIcon('🤖')">🤖</button>
+                <button class="icon-btn" onclick="setWidgetIcon('👋')">👋</button>
+                <button class="icon-btn" onclick="setWidgetIcon('❓')">❓</button>
+                <button class="icon-btn" onclick="setWidgetIcon('📩')">📩</button>
+                <button class="icon-btn" onclick="setWidgetIcon('💡')">💡</button>
+                <button class="icon-btn" onclick="setWidgetIcon('⚡')">⚡</button>
+                <button class="icon-btn" onclick="setWidgetIcon('✨')">✨</button>
+            </div>
         </div>
     </div>
 
     <p class="demo-note">
-        Для реального сайта можно оставить только блок настроек и подключение JS-файла.
+        Нажмите на круглую кнопку виджета в углу экрана, чтобы открыть чат и проверить внешний вид.
     </p>
 
     <script>
@@ -173,8 +380,8 @@
 
             accentColor: '#0d6efd',
 
-            offsetX: '8px',
-            offsetY: '8px',
+            offsetX: '10px',
+            offsetY: '10px',
 
             mobileOffsetX: '12px',
             mobileOffsetY: '12px',
@@ -284,6 +491,75 @@
 
             debug: true
         };
+
+        function hexToRgb(hex) {
+            hex = String(hex || '').replace('#', '');
+
+            if (hex.length === 3) {
+                hex = hex.split('').map(function (x) {
+                    return x + x;
+                }).join('');
+            }
+
+            var num = parseInt(hex, 16);
+
+            return {
+                r: (num >> 16) & 255,
+                g: (num >> 8) & 255,
+                b: num & 255
+            };
+        }
+
+        function rgba(hex, alpha) {
+            var rgb = hexToRgb(hex);
+            return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + alpha + ')';
+        }
+
+        function setWidgetAccent(color) {
+            if (!window.LaserChatWidget) return;
+
+            LaserChatWidget.setConfig({
+                accentColor: color,
+                colors: {
+                    accent: color,
+
+                    toggleBg: color,
+                    headerBg: color,
+                    userMessageBg: color,
+
+                    toggleShadow: rgba(color, 0.4),
+                    waveColor: rgba(color, 0.55),
+
+                    inputFocusBorder: rgba(color, 0.55),
+
+                    chipBg: rgba(color, 0.1),
+                    chipBgHover: rgba(color, 0.3),
+                    chipBorder: rgba(color, 0.4)
+                }
+            });
+        }
+
+        function setWidgetIcon(icon) {
+    if (!window.LaserChatWidget) return;
+
+    LaserChatWidget.setConfig({
+        icons: {
+            open: icon,
+            close: '✕',
+            send: '➤'
+        }
+    });
+
+    // Только для демо-страницы:
+    // вручную обновляем видимую иконку круглой кнопки,
+    // если чат сейчас закрыт.
+    var state = LaserChatWidget.getState ? LaserChatWidget.getState() : null;
+    var iconEl = document.querySelector('.lsw-toggle-icon');
+
+    if (iconEl && (!state || !state.isOpen)) {
+        iconEl.textContent = icon;
+    }
+}
     </script>
 
     <script src="../widget/laser-chat-widget.js"></script>
