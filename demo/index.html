@@ -2,12 +2,20 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>LaserShow Widget — Демо</title>
+
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             background: #0f0f1a;
             color: #e0e0e0;
             min-height: 100vh;
@@ -18,48 +26,488 @@
             gap: 24px;
             padding: 40px 20px;
         }
-        h1 { color: #00e5ff; font-size: 1.8rem; }
-        p  { color: #888; font-size: 1rem; }
-        .demo-btns {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
+
+        h1 {
+            color: #00e5ff;
+            font-size: 1.9rem;
+            text-align: center;
         }
+
+        p {
+            color: #999;
+            font-size: 1rem;
+            text-align: center;
+            max-width: 760px;
+            line-height: 1.5;
+        }
+
+        code {
+            padding: 3px 7px;
+            border-radius: 6px;
+            background: rgba(255,255,255,.08);
+            color: #00e5ff;
+        }
+
+        .demo-panel {
+            width: min(820px, 100%);
+            padding: 20px;
+            border-radius: 18px;
+            background: rgba(255,255,255,.05);
+            border: 1px solid rgba(255,255,255,.08);
+        }
+
+        .demo-panel h2 {
+            margin-bottom: 14px;
+            color: #fff;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 10px;
+        }
+
         .demo-btn {
-            padding: 8px 20px;
+            padding: 9px 14px;
             border-radius: 20px;
-            border: 1px solid rgba(13,110,253,0.5);
-            background: rgba(13,110,253,0.15);
+            border: 1px solid rgba(13,110,253,.5);
+            background: rgba(13,110,253,.15);
             color: #e0e0e0;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: .9rem;
+            transition: background .18s, transform .12s;
         }
-        .demo-btn:hover { background: rgba(13,110,253,0.35); }
+
+        .demo-btn:hover {
+            background: rgba(13,110,253,.35);
+            transform: translateY(-1px);
+        }
+
+        .demo-note {
+            font-size: .9rem;
+            color: #777;
+        }
     </style>
 </head>
 <body>
 
     <h1>💡 LaserShow Widget — Демо</h1>
-    <p>Кнопка 💬 появится внизу справа</p>
 
-    <div class="demo-btns">
-        <button class="demo-btn" onclick="LaserChatWidget.setLang('en')">EN</button>
-        <button class="demo-btn" onclick="LaserChatWidget.setLang('ru')">RU</button>
+    <p>
+        Виджет настраивается через объект <code>window.LaserChatConfig</code>.
+        Можно менять положение, цвет, отступы, размеры, активность, тексты и поведение.
+    </p>
+
+    <div class="demo-panel">
+        <h2>Быстрая проверка положения и отступов</h2>
+
+        <div class="demo-grid">
+            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'bottom-right' })">
+                Снизу справа
+            </button>
+
+            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'bottom-left' })">
+                Снизу слева
+            </button>
+
+            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'top-right' })">
+                Сверху справа
+            </button>
+
+            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'top-left' })">
+                Сверху слева
+            </button>
+
+            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ offsetX: '24px', offsetY: '24px' })">
+                Отступ 24px
+            </button>
+
+            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ offsetX: '40px', offsetY: '40px' })">
+                Отступ 40px
+            </button>
+
+            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ offsetX: '24px', offsetY: '110px' })">
+                Поднять выше
+            </button>
+
+            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ accentColor: '#ff3b30', colors: { accent: '#ff3b30' } })">
+                Красный цвет
+            </button>
+
+            <button class="demo-btn" onclick="LaserChatWidget.setConfig({ accentColor: '#0d6efd', colors: { accent: '#0d6efd' } })">
+                Синий цвет
+            </button>
+
+            <button class="demo-btn" onclick="LaserChatWidget.open()">
+                Открыть чат
+            </button>
+
+            <button class="demo-btn" onclick="LaserChatWidget.close()">
+                Закрыть чат
+            </button>
+
+            <button class="demo-btn" onclick="LaserChatWidget.disable()">
+                Выключить
+            </button>
+
+            <button class="demo-btn" onclick="LaserChatWidget.enable()">
+                Включить
+            </button>
+        </div>
     </div>
 
-    <!-- Шаг 1: конфиг -->
+    <p class="demo-note">
+        Для реального сайта можно оставить только блок настроек и подключение JS-файла.
+    </p>
+
+    <!-- ========================================================= -->
+    <!-- НАСТРОЙКИ ВИДЖЕТА                                        -->
+    <!-- Важно: этот блок должен идти ДО подключения JS-виджета.   -->
+    <!-- ========================================================= -->
     <script>
         window.LaserChatConfig = {
-            workerUrl:   'https://laser-api.vitalitalipski.workers.dev',
-            lang:        'ru',
-            position:    'right',
-            accentColor: '#0d6efd'
+            /*
+             * ОБЯЗАТЕЛЬНО.
+             * URL твоего Cloudflare Worker / API.
+             */
+            workerUrl: 'https://laser-api.vitalitalipski.workers.dev',
+
+            /*
+             * Путь API-эндпоинта.
+             * Итоговый запрос будет:
+             * https://laser-api.vitalitalipski.workers.dev/chat
+             */
+            endpointPath: '/chat',
+
+            /*
+             * Активность виджета.
+             *
+             * true  — виджет включён
+             * false — виджет не показывается
+             */
+            enabled: true,
+
+            /*
+             * Положение виджета.
+             *
+             * Доступные варианты:
+             *
+             * bottom-right — снизу справа
+             * bottom-left  — снизу слева
+             * top-right    — сверху справа
+             * top-left     — сверху слева
+             *
+             * Также можно писать:
+             *
+             * right
+             * left
+             * top right
+             * top left
+             * bottom right
+             * bottom left
+             */
+            position: 'bottom-right',
+
+            /*
+             * Основной цвет виджета.
+             * Используется для:
+             *
+             * - круглой кнопки;
+             * - шапки чата;
+             * - сообщений пользователя;
+             * - кнопки отправки.
+             */
+            accentColor: '#0d6efd',
+
+            /*
+             * Отступы от края экрана на десктопе.
+             *
+             * offsetX — горизонтальный отступ.
+             * Для right-позиций это отступ справа.
+             * ��ля left-позиций это отступ слева.
+             *
+             * offsetY — вертикальный отступ.
+             * Для bottom-позиций это отступ снизу.
+             * Для top-позиций это отступ сверху.
+             *
+             * Примеры:
+             *
+             * position: 'bottom-right'
+             * offsetX: '24px' — отступ справа
+             * offsetY: '24px' — отступ снизу
+             *
+             * position: 'top-left'
+             * offsetX: '24px' — отступ слева
+             * offsetY: '24px' — отступ сверху
+             */
+            offsetX: '24px',
+            offsetY: '24px',
+
+            /*
+             * Отступы на мобильных устройствах.
+             *
+             * Обычно на мобильных кнопку делают чуть ближе к краю,
+             * поэтому значения меньше.
+             */
+            mobileOffsetX: '16px',
+            mobileOffsetY: '16px',
+
+            /*
+             * Размер круглой кнопки на десктопе.
+             */
+            buttonSize: '56px',
+
+            /*
+             * Размер круглой кнопки на мобильных.
+             */
+            mobileButtonSize: '50px',
+
+            /*
+             * Ширина окна чата на десктопе.
+             */
+            windowWidth: '360px',
+
+            /*
+             * Максимальная высота области сообщений.
+             */
+            messagesMaxHeight: '320px',
+
+            /*
+             * Боковой отступ окна чата на мобильных.
+             * На маленьких экранах окно растягивается почти на всю ширину,
+             * а этот параметр задаёт отступ слева и справа.
+             */
+            mobileWindowSideOffset: '8px',
+
+            /*
+             * Z-index.
+             *
+             * Если на сайте есть фиксированная шапка, попапы,
+             * меню или другие элементы, которые перекрывают виджет,
+             * можно увеличить значение.
+             */
+            zIndex: 9999,
+
+            /*
+             * Анимация круглой кнопки.
+             *
+             * true  — включить пульсацию/анимацию
+             * false — отключить
+             */
+            animation: true,
+
+            /*
+             * Открывать чат сразу после загрузки страницы.
+             */
+            openOnLoad: false,
+
+            /*
+             * Показывать приветственное сообщение от бота.
+             */
+            showGreeting: true,
+
+            /*
+             * Закрывать чат при клике вне окна.
+             */
+            closeOnOutsideClick: true,
+
+            /*
+             * Закрывать чат по клавише Escape.
+             */
+            closeOnEsc: true,
+
+            /*
+             * Автоматически ставить фокус в поле ввода при открытии.
+             */
+            focusOnOpen: true,
+
+            /*
+             * Максимальная длина сообщения пользователя.
+             */
+            maxMessageLength: 500,
+
+            /*
+             * Таймаут запроса к Worker/API в миллисекундах.
+             */
+            requestTimeout: 30000,
+
+            /*
+             * Показывать быстрые кнопки.
+             */
+            showChips: true,
+
+            /*
+             * Быстрые кнопки.
+             *
+             * id уходит на сервер как chipId.
+             * label показывается пользователю в интерфейсе.
+             */
+            chips: [
+                {
+                    id: 'prices',
+                    label: '💰 Цены'
+                },
+                {
+                    id: 'stories',
+                    label: '🎬 Сюжеты'
+                },
+                {
+                    id: 'order',
+                    label: '📋 Как заказать'
+                },
+                {
+                    id: 'contacts',
+                    label: '📞 Контакты'
+                }
+            ],
+
+            /*
+             * Дополнительные данные, которые будут уходить в каждый запрос.
+             *
+             * Удобно, если один Worker обслуживает несколько сайтов.
+             */
+            payloadExtra: {
+                site: 'demo',
+                source: 'laser-widget'
+            },
+
+            /*
+             * Иконки виджета.
+             */
+            icons: {
+                open: '💬',
+                close: '✕',
+                send: '➤'
+            },
+
+            /*
+             * Тексты виджета.
+             */
+            texts: {
+                title: 'Чат с консультантом',
+                greeting: 'Здравствуйте! Чем могу помочь? 👋',
+                you: 'Вы',
+                bot: 'Бот',
+                placeholder: 'Спросите о ценах и услугах...',
+                send: '➤',
+                loading: '...',
+                error: 'Ошибка',
+                close: 'Закрыть'
+            },
+
+            /*
+             * Цвета виджета.
+             *
+             * Можно указывать только нужные поля.
+             * Всё остальное возьмётся из настроек по умолчанию в JS-файле.
+             */
+            colors: {
+                /*
+                 * Главный цвет.
+                 */
+                accent: '#0d6efd',
+
+                /*
+                 * Круглая кнопка.
+                 */
+                toggleBg: '#0d6efd',
+                toggleText: '#ffffff',
+                toggleShadow: 'rgba(13,110,253,.5)',
+                waveColor: 'rgba(13,110,253,.55)',
+
+                /*
+                 * Окно чата.
+                 */
+                windowBg: '#16213e',
+                windowBorder: 'rgba(255,255,255,.08)',
+                windowShadow: 'rgba(0,0,0,.6)',
+
+                /*
+                 * Шапка чата.
+                 */
+                headerBg: '#0d6efd',
+                headerText: '#ffffff',
+
+                /*
+                 * Фон области сообщений.
+                 */
+                messagesBg: '#16213e',
+
+                /*
+                 * Сообщения бота.
+                 */
+                botMessageBg: '#1e2a45',
+                botMessageText: '#dde3f0',
+
+                /*
+                 * Сообщения пользователя.
+                 */
+                userMessageBg: '#0d6efd',
+                userMessageText: '#ffffff',
+
+                /*
+                 * Нижняя область ввода.
+                 */
+                inputRowBg: '#0f1829',
+
+                /*
+                 * Поле ввода.
+                 */
+                inputBg: '#1e2a45',
+                inputText: '#e0e0e0',
+                inputPlaceholder: '#4a6080',
+                inputBorder: 'rgba(255,255,255,.1)',
+                inputFocusBorder: 'rgba(13,110,253,.55)',
+
+                /*
+                 * Быстрые кнопки.
+                 */
+                chipBg: 'rgba(13,110,253,.1)',
+                chipBgHover: 'rgba(13,110,253,.28)',
+                chipBorder: 'rgba(13,110,253,.45)',
+                chipText: '#9ab0d0',
+                chipTextHover: '#e8f0ff',
+
+                /*
+                 * Ссылки в сообщениях.
+                 */
+                link: '#00e5ff',
+
+                /*
+                 * Точки индикатора "печатает".
+                 */
+                typingDot: '#6c8ebf',
+
+                /*
+                 * Подписи "Вы" / "Бот".
+                 */
+                labelText: 'rgba(255,255,255,.6)'
+            },
+
+            /*
+             * Логи в консоль.
+             *
+             * true  — показывать служебные сообщения
+             * false — не показывать
+             */
+            debug: true
         };
     </script>
 
-    <!-- Шаг 2: подключаем JS виджета -->
+    <!-- ========================================================= -->
+    <!-- ПОДКЛЮЧЕНИЕ JS-ФАЙЛА ВИДЖЕТА                             -->
+    <!-- ========================================================= -->
+
+    <!-- Локально для демо -->
     <script src="../widget/laser-chat-widget.js"></script>
+
+    <!-- 
+        Для реального сайта будет примерно так:
+
+        <script src="https://your-domain.com/widget/laser-chat-widget.js"></script>
+    -->
 
 </body>
 </html>
