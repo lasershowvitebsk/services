@@ -2,567 +2,297 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaserShow Widget — Демо-панель настройки</title>
 
-    <title>LaserShow Widget — Демо</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #0f0f1a;
-            color: #e0e0e0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 24px;
-            padding: 40px 20px;
+            background: #0f0f1a; color: #e0e0e0; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 24px; padding: 40px 20px;
         }
-
-        h1 {
-            color: #00e5ff;
-            font-size: 1.9rem;
-            text-align: center;
-        }
-
-        p {
-            color: #999;
-            font-size: 1rem;
-            text-align: center;
-            max-width: 760px;
-            line-height: 1.5;
-        }
-
-        code {
-            padding: 3px 7px;
-            border-radius: 6px;
-            background: rgba(255,255,255,.08);
-            color: #00e5ff;
-        }
-
+        h1 { color: #00e5ff; font-size: 1.9rem; text-align: center; text-shadow: 0 0 10px #00e5ff; }
+        p { color: #999; font-size: 1rem; text-align: center; max-width: 760px; line-height: 1.5; }
+        
         .demo-panel {
-            width: min(920px, 100%);
-            padding: 22px;
-            border-radius: 18px;
-            background: rgba(255,255,255,.05);
-            border: 1px solid rgba(255,255,255,.08);
+            width: min(920px, 100%); padding: 22px; border-radius: 18px;
+            background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
             box-shadow: 0 16px 45px rgba(0,0,0,.18);
         }
-
-        .demo-panel h2 {
-            margin-bottom: 18px;
-            color: #fff;
-            font-size: 1.15rem;
-            text-align: center;
-        }
-
-        .demo-section {
-            margin-bottom: 20px;
-        }
-
-        .demo-section:last-child {
-            margin-bottom: 0;
-        }
-
+        .demo-panel h2 { margin-bottom: 18px; color: #fff; font-size: 1.15rem; text-align: center; }
+        .demo-section { margin-bottom: 20px; }
+        .demo-section:last-child { margin-bottom: 0; }
         .demo-section-title {
-            margin-bottom: 10px;
-            color: #bfc8da;
-            font-size: .88rem;
-            font-weight: 600;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: .04em;
+            margin-bottom: 10px; color: #bfc8da; font-size: .88rem;
+            font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: .04em;
         }
-
-        .demo-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 10px;
-        }
-
-        .demo-grid.small {
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        }
-
+        .demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+        .demo-grid.small { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+        
         .demo-btn {
-            padding: 9px 14px;
-            border-radius: 20px;
-            border: 1px solid rgba(13,110,253,.5);
-            background: rgba(13,110,253,.15);
-            color: #e0e0e0;
-            cursor: pointer;
-            font-size: .9rem;
-            transition: background .18s, transform .12s, border-color .18s;
+            padding: 9px 14px; border-radius: 20px; border: 1px solid rgba(13,110,253,.5);
+            background: rgba(13,110,253,.15); color: #e0e0e0; cursor: pointer;
+            font-size: .9rem; transition: background .18s, transform .12s, border-color .18s;
+        }
+        .demo-btn:hover, .demo-btn.active {
+            background: rgba(13,110,253,.35); border-color: rgba(13,110,253,.85);
+            color: #fff; transform: translateY(-1px);
         }
 
-        .demo-btn:hover {
-            background: rgba(13,110,253,.35);
-            border-color: rgba(13,110,253,.85);
-            transform: translateY(-1px);
-        }
-
-        .color-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-        }
-
+        .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
         .color-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 9px 12px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,.12);
-            background: rgba(255,255,255,.045);
-            color: #e0e0e0;
-            cursor: pointer;
-            font-size: .9rem;
-            transition: background .18s, transform .12s, border-color .18s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 9px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,.12);
+            background: rgba(255,255,255,.045); color: #e0e0e0; cursor: pointer;
+            font-size: .9rem; transition: background .18s, transform .12s, border-color .18s;
         }
-
-        .color-btn:hover {
-            background: rgba(255,255,255,.085);
-            border-color: rgba(255,255,255,.22);
-            transform: translateY(-1px);
+        .color-btn:hover, .color-btn.active {
+            background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.4); transform: translateY(-1px);
         }
-
-        .swatch {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            box-shadow: 0 0 12px currentColor;
-            flex-shrink: 0;
-        }
-
-        .icon-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-            gap: 10px;
-        }
-
+        .swatch { width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 0 12px currentColor; flex-shrink: 0; }
+        
+        .icon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 10px; }
         .icon-btn {
-            padding: 9px 12px;
-            border-radius: 20px;
-            border: 1px solid rgba(13,110,253,.5);
-            background: rgba(13,110,253,.15);
-            color: #fff;
-            cursor: pointer;
-            font-size: 1.15rem;
-            transition: background .18s, transform .12s, border-color .18s;
+            padding: 9px 12px; border-radius: 20px; border: 1px solid rgba(13,110,253,.5);
+            background: rgba(13,110,253,.15); color: #fff; cursor: pointer;
+            font-size: 1.15rem; transition: background .18s, transform .12s, border-color .18s;
+        }
+        .icon-btn:hover, .icon-btn.active {
+            background: rgba(13,110,253,.35); border-color: rgba(13,110,253,.85); transform: translateY(-1px);
         }
 
-        .icon-btn:hover {
-            background: rgba(13,110,253,.35);
-            border-color: rgba(13,110,253,.85);
-            transform: translateY(-1px);
+        .demo-input {
+            width: 100%; padding: 10px 14px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.045);
+            color: #e0e0e0; outline: none; font-size: 0.95rem; transition: border-color 0.2s;
         }
+        .demo-input:focus { border-color: #0d6efd; }
+        .demo-note { font-size: .9rem; color: #777; }
 
-        .demo-note {
-            font-size: .9rem;
-            color: #777;
-        }
-
+        @media (max-width: 768px) { .color-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 576px) {
-            body {
-                justify-content: flex-start;
-                padding-top: 36px;
-            }
-
-            h1 {
-                font-size: 1.55rem;
-            }
-
-            .demo-panel {
-                padding: 18px;
-            }
-
-            .demo-grid,
-            .demo-grid.small,
-            .color-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .icon-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
+            body { justify-content: flex-start; padding-top: 36px; }
+            h1 { font-size: 1.55rem; }
+            .demo-panel { padding: 18px; }
+            .demo-grid, .demo-grid.small, .color-grid { grid-template-columns: 1fr 1fr; }
+            .icon-grid { grid-template-columns: repeat(4, 1fr); }
         }
     </style>
 </head>
 <body>
 
-    <h1>💡 LaserShow Widget — Демо</h1>
-
-    <p>
-        Можно выбрать положение, отступ, цвет, размер, иконку и поведение.
-    </p>
+    <h1>💡 LaserShow Widget — Демо настройки</h1>
+    <p>Выберите положение, отступ, цвета, тему, загрузите реальное фото аватара или настройте имя консультанта.</p>
 
     <div class="demo-panel">
         <h2>Настройка внешнего вида виджета</h2>
 
         <div class="demo-section">
+            <div class="demo-section-title">Тема оформления чата</div>
+            <div class="demo-grid" id="theme-group">
+                <button class="demo-btn active" onclick="setActive(this, 'theme-group'); setWidgetTheme('dark')">
+                    🌑 Тёмная тема
+                </button>
+                <button class="demo-btn" onclick="setActive(this, 'theme-group'); setWidgetTheme('light')">
+                    ☀️ Светлая тема
+                </button>
+            </div>
+        </div>
+
+        <div class="demo-section">
             <div class="demo-section-title">Положение на экране</div>
-
-            <div class="demo-grid">
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'bottom-right' })">
-                    Снизу справа
-                </button>
-
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'bottom-left' })">
-                    Снизу слева
-                </button>
-
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'top-right' })">
-                    Сверху справа
-                </button>
-
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ position: 'top-left' })">
-                    Сверху слева
-                </button>
+            <div class="demo-grid" id="pos-group">
+                <button class="demo-btn active" onclick="setActive(this, 'pos-group'); LaserChatWidget.setConfig({ position: 'bottom-right' })">Снизу справа</button>
+                <button class="demo-btn" onclick="setActive(this, 'pos-group'); LaserChatWidget.setConfig({ position: 'bottom-left' })">Снизу слева</button>
+                <button class="demo-btn" onclick="setActive(this, 'pos-group'); LaserChatWidget.setConfig({ position: 'top-right' })">Сверху справа</button>
+                <button class="demo-btn" onclick="setActive(this, 'pos-group'); LaserChatWidget.setConfig({ position: 'top-left' })">Сверху слева</button>
             </div>
         </div>
 
         <div class="demo-section">
             <div class="demo-section-title">Отступ от края</div>
-
-            <div class="demo-grid small">
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ offsetX: '10px', offsetY: '10px' })">
-                    Отступ 10px
-                </button>
-
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ offsetX: '25px', offsetY: '25px' })">
-                    Отступ 25px
-                </button>
+            <div class="demo-grid small" id="offset-group">
+                <button class="demo-btn" onclick="setActive(this, 'offset-group'); LaserChatWidget.setConfig({ offsetX: '10px', offsetY: '10px' })">Отступ 10px</button>
+                <button class="demo-btn active" onclick="setActive(this, 'offset-group'); LaserChatWidget.setConfig({ offsetX: '16px', offsetY: '16px' })">Отступ 16px</button>
+                <button class="demo-btn" onclick="setActive(this, 'offset-group'); LaserChatWidget.setConfig({ offsetX: '25px', offsetY: '25px' })">Отступ 25px</button>
             </div>
         </div>
 
         <div class="demo-section">
-            <div class="demo-section-title">Основной цвет</div>
-
-            <div class="color-grid">
-                <button class="color-btn" onclick="setWidgetAccent('#0d6efd')">
-                    <span class="swatch" style="background:#0d6efd;color:#0d6efd;"></span>
-                    Синий
-                </button>
-
-                <button class="color-btn" onclick="setWidgetAccent('#ff3b30')">
-                    <span class="swatch" style="background:#ff3b30;color:#ff3b30;"></span>
-                    Красный
-                </button>
-
-                <button class="color-btn" onclick="setWidgetAccent('#22c55e')">
-                    <span class="swatch" style="background:#22c55e;color:#22c55e;"></span>
-                    Зелёный
-                </button>
-
-                <button class="color-btn" onclick="setWidgetAccent('#a855f7')">
-                    <span class="swatch" style="background:#a855f7;color:#a855f7;"></span>
-                    Фиолетовый
-                </button>
-
-                <button class="color-btn" onclick="setWidgetAccent('#06b6d4')">
-                    <span class="swatch" style="background:#06b6d4;color:#06b6d4;"></span>
-                    Бирюзовый
-                </button>
-
-                <button class="color-btn" onclick="setWidgetAccent('#f97316')">
-                    <span class="swatch" style="background:#f97316;color:#f97316;"></span>
-                    Оранжевый
-                </button>
-
-                <button class="color-btn" onclick="setWidgetAccent('#ec4899')">
-                    <span class="swatch" style="background:#ec4899;color:#ec4899;"></span>
-                    Розовый
-                </button>
-
-                <button class="color-btn" onclick="setWidgetAccent('#eab308')">
-                    <span class="swatch" style="background:#eab308;color:#eab308;"></span>
-                    Жёлтый
-                </button>
+            <div class="demo-section-title">Основной цвет бренда</div>
+            <div class="color-grid" id="color-group">
+                <button class="color-btn active" onclick="setActive(this, 'color-group'); setWidgetAccent('#0d6efd')"><span class="swatch" style="background:#0d6efd;color:#0d6efd;"></span>Синий</button>
+                <button class="color-btn" onclick="setActive(this, 'color-group'); setWidgetAccent('#06b6d4')"><span class="swatch" style="background:#06b6d4;color:#06b6d4;"></span>Бирюза</button>
+                <button class="color-btn" onclick="setActive(this, 'color-group'); setWidgetAccent('#10b981')"><span class="swatch" style="background:#10b981;color:#10b981;"></span>Мятный</button>
+                <button class="color-btn" onclick="setActive(this, 'color-group'); setWidgetAccent('#22c55e')"><span class="swatch" style="background:#22c55e;color:#22c55e;"></span>Зелёный</button>
+                <button class="color-btn" onclick="setActive(this, 'color-group'); setWidgetAccent('#a855f7')"><span class="swatch" style="background:#a855f7;color:#a855f7;"></span>Фиолет</button>
+                <button class="color-btn" onclick="setActive(this, 'color-group'); setWidgetAccent('#6366f1')"><span class="swatch" style="background:#6366f1;color:#6366f1;"></span>Индиго</button>
+                <button class="color-btn" onclick="setActive(this, 'color-group'); setWidgetAccent('#ec4899')"><span class="swatch" style="background:#ec4899;color:#ec4899;"></span>Розовый</button>
+                <button class="color-btn" onclick="setActive(this, 'color-group'); setWidgetAccent('#f97316')"><span class="swatch" style="background:#f97316;color:#f97316;"></span>Оранж</button>
+                <button class="color-btn" onclick="setActive(this, 'color-group'); setWidgetAccent('#eab308')"><span class="swatch" style="background:#eab308;color:#eab308;"></span>Жёлтый</button>
+                <button class="color-btn" onclick="setActive(this, 'color-group'); setWidgetAccent('#ff3b30')"><span class="swatch" style="background:#ff3b30;color:#ff3b30;"></span>Красный</button>
             </div>
         </div>
 
         <div class="demo-section">
-            <div class="demo-section-title">Размер кнопки</div>
+            <div class="demo-section-title">Аватар кнопки запуска</div>
+            <div class="demo-grid" id="avatar-group">
+                <button class="demo-btn active" onclick="setActive(this, 'avatar-group'); setWidgetAvatar('')">💬 Использовать эмодзи</button>
+                <button class="demo-btn" onclick="setActive(this, 'avatar-group'); setWidgetAvatar('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&h=100&q=80')">👩‍💼 Алина (Менеджер)</button>
+                <button class="demo-btn" onclick="setActive(this, 'avatar-group'); setWidgetAvatar('https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=100&h=100&q=80')">👨‍💼 Дмитрий (Поддержка)</button>
+            </div>
+        </div>
 
-            <div class="demo-grid small">
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ buttonSize: '46px' })">
-                    Маленькая
-                </button>
+        <div class="demo-section">
+            <div class="demo-section-title">Имя, заголовок и статус</div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Заголовок шапки</label>
+                    <input type="text" class="demo-input" value="Чат с консультантом" oninput="setWidgetText('title', this.value)">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Имя (Бот)</label>
+                    <input type="text" class="demo-input" value="Бот" oninput="setWidgetText('bot', this.value)">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Статус (Подзаголовок)</label>
+                    <input type="text" class="demo-input" value="Онлайн" oninput="setWidgetText('subtitle', this.value)">
+                </div>
+            </div>
+        </div>
 
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ buttonSize: '58px' })">
-                    Стандартная
-                </button>
-
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ buttonSize: '70px' })">
-                    Большая
-                </button>
+        <div class="demo-section">
+            <div class="demo-section-title">Размер кнопки запуска</div>
+            <div class="demo-grid small" id="size-group">
+                <button class="demo-btn" onclick="setActive(this, 'size-group'); LaserChatWidget.setConfig({ buttonSize: '50px', mobileButtonSize: '44px' })">Компактная</button>
+                <button class="demo-btn active" onclick="setActive(this, 'size-group'); LaserChatWidget.setConfig({ buttonSize: '60px', mobileButtonSize: '50px' })">Стандартная</button>
+                <button class="demo-btn" onclick="setActive(this, 'size-group'); LaserChatWidget.setConfig({ buttonSize: '70px', mobileButtonSize: '60px' })">Крупная</button>
             </div>
         </div>
 
         <div class="demo-section">
             <div class="demo-section-title">Размер окна чата</div>
-
-            <div class="demo-grid small">
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ windowWidth: '320px' })">
-                    Компактное
-                </button>
-
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ windowWidth: '360px' })">
-                    Стандартное
-                </button>
-
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ windowWidth: '420px' })">
-                    Широкое
-                </button>
+            <div class="demo-grid small" id="width-group">
+                <button class="demo-btn" onclick="setActive(this, 'width-group'); LaserChatWidget.setConfig({ windowWidth: '320px' })">Компактное</button>
+                <button class="demo-btn active" onclick="setActive(this, 'width-group'); LaserChatWidget.setConfig({ windowWidth: '360px' })">Стандартное</button>
+                <button class="demo-btn" onclick="setActive(this, 'width-group'); LaserChatWidget.setConfig({ windowWidth: '420px' })">Широкое</button>
             </div>
         </div>
 
         <div class="demo-section">
-            <div class="demo-section-title">Поведение</div>
-
-            <div class="demo-grid">
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ animation: true })">
-                    Анимация включена
+            <div class="demo-section-title">Анимация кнопки</div>
+            <div class="demo-grid" id="anim-group">
+                <button class="demo-btn active" onclick="setActive(this, 'anim-group'); LaserChatWidget.setConfig({ animation: true })">
+                    ✨ Анимация вкл
                 </button>
-
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ animation: false })">
-                    Анимация выключена
+                <button class="demo-btn" onclick="setActive(this, 'anim-group'); LaserChatWidget.setConfig({ animation: false })">
+                    ⏸ Анимация выкл
                 </button>
-
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ showChips: true })">
-                    Быстрые кнопки включены
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <div class="demo-section-title">Быстрые вопросы</div>
+            <div class="demo-grid" id="chips-group">
+                <button class="demo-btn active" onclick="setActive(this, 'chips-group'); LaserChatWidget.setConfig({ showChips: true })">
+                    🔘 Включены
                 </button>
-
-                <button class="demo-btn" onclick="LaserChatWidget.setConfig({ showChips: false })">
-                    Быстрые кнопки выключены
+                <button class="demo-btn" onclick="setActive(this, 'chips-group'); LaserChatWidget.setConfig({ showChips: false })">
+                    ✖ Выключены
                 </button>
             </div>
         </div>
 
-        <div class="demo-section">
-            <div class="demo-section-title">Иконка кнопки</div>
-
-            <div class="icon-grid">
-                <button class="icon-btn" onclick="setWidgetIcon('💬')">💬</button>
-                <button class="icon-btn" onclick="setWidgetIcon('🤖')">🤖</button>
-                <button class="icon-btn" onclick="setWidgetIcon('👋')">👋</button>
-                <button class="icon-btn" onclick="setWidgetIcon('❓')">❓</button>
-                <button class="icon-btn" onclick="setWidgetIcon('📩')">📩</button>
-                <button class="icon-btn" onclick="setWidgetIcon('💡')">💡</button>
-                <button class="icon-btn" onclick="setWidgetIcon('⚡')">⚡</button>
-                <button class="icon-btn" onclick="setWidgetIcon('✨')">✨</button>
+        <div class="demo-section" id="emoji-icons-section">
+            <div class="demo-section-title">Эмодзи кнопки (если фото выключено)</div>
+            <div class="icon-grid" id="icon-group">
+                <button class="icon-btn active" onclick="setActive(this, 'icon-group'); setWidgetIcon('💬')">💬</button>
+                <button class="icon-btn" onclick="setActive(this, 'icon-group'); setWidgetIcon('🤖')">🤖</button>
+                <button class="icon-btn" onclick="setActive(this, 'icon-group'); setWidgetIcon('👋')">👋</button>
+                <button class="icon-btn" onclick="setActive(this, 'icon-group'); setWidgetIcon('💡')">💡</button>
+                <button class="icon-btn" onclick="setActive(this, 'icon-group'); setWidgetIcon('✨')">✨</button>
+                <button class="icon-btn" onclick="setActive(this, 'icon-group'); setWidgetIcon('📞')">📞</button>
             </div>
         </div>
     </div>
 
-    <p class="demo-note">
-        Нажмите на круглую кнопку виджета в углу экрана, чтобы открыть чат и проверить внешний вид.
-    </p>
-
     <script>
+        // Функция для подсветки активной кнопки в группе
+        function setActive(btn, groupId) {
+            var group = document.getElementById(groupId);
+            if (!group) return;
+            var buttons = group.querySelectorAll('button');
+            buttons.forEach(function(b) {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+
         window.LaserChatConfig = {
             workerUrl: 'https://laser-api.vitalitalipski.workers.dev',
             endpointPath: '/chat',
-
-            enabled: true,
-
-            position: 'bottom-right',
-
-            accentColor: '#0d6efd',
-
-            offsetX: '10px',
-            offsetY: '10px',
-
-            mobileOffsetX: '12px',
-            mobileOffsetY: '12px',
-
-            buttonSize: '60px',
-            mobileButtonSize: '50px',
-
-            windowWidth: '360px',
-            messagesMaxHeight: '350px',
-
-            mobileWindowSideOffset: '8px',
-
-            zIndex: 9999,
-
-            animation: true,
-            openOnLoad: false,
-            showGreeting: true,
-
-            closeOnOutsideClick: true,
-            closeOnEsc: true,
-            focusOnOpen: true,
-
-            maxMessageLength: 500,
-            requestTimeout: 30000,
-
+            turnstileSiteKey: '0x4AAAAAAD--fk_8oEALAXiV',
+            enabled: true, theme: 'dark', position: 'bottom-right', accentColor: '#0d6efd',
+            offsetX: '16px', offsetY: '16px', mobileOffsetX: '12px', mobileOffsetY: '12px',
+            buttonSize: '60px', mobileButtonSize: '50px', windowWidth: '360px', messagesMaxHeight: '350px',
+            zIndex: 9999, animation: true, openOnLoad: false, showGreeting: true,
+            closeOnOutsideClick: true, closeOnEsc: true, focusOnOpen: true, maxMessageLength: 500, requestTimeout: 30000,
             showChips: true,
-
             chips: [
                 { id: 'prices', label: '💰 Цены' },
                 { id: 'stories', label: '🎬 Сюжеты' },
                 { id: 'order', label: '📋 Как заказать' },
                 { id: 'contacts', label: '📞 Контакты' }
             ],
-
-            payloadExtra: {
-                site: 'demo',
-                source: 'laser-widget'
-            },
-
-            icons: {
-                open: '💬',
-                close: '✕',
-                send: '➤'
-            },
-
+            icons: { open: '💬', close: '✕', send: '➤' },
             texts: {
-                title: 'Чат с консультантом',
-                greeting: 'Здравствуйте! Чем могу помочь? 👋',
-                you: 'Вы',
-                bot: 'Бот',
-                placeholder: 'Спросите о ценах и услугах...',
-                send: '➤',
-                loading: '...',
-                error: 'Ошибка',
-                close: 'Закрыть',
-                chips: {
-                    prices: '💰 Цены',
-                    stories: '🎬 Сюжеты',
-                    order: '📋 Как заказать',
-                    contacts: '📞 Контакты'
-                }
+                title: 'Чат с консультантом', subtitle: 'Онлайн', greeting: 'Здравствуйте! Чем могу помочь? 👋',
+                you: 'Вы', bot: 'Бот', placeholder: 'Спросите о ценах и услугах...', send: '➤', loading: '...', error: 'Ошибка', close: 'Закрыть',
+                verificationRequired: '⏳ Проверка безопасности...', verificationFailed: 'Проверка не пройдена.', verificationExpired: 'Время проверки истекло.', retry: 'Повторить'
             },
-
-            colors: {
-                accent: '#0d6efd',
-
-                toggleBg: '#0d6efd',
-                toggleText: '#ffffff',
-                toggleShadow: 'rgba(13,110,253,.4)',
-                waveColor: 'rgba(13,110,253,.55)',
-
-                windowBg: '#1a1a2e',
-                windowBorder: '#333',
-                windowShadow: 'rgba(0,0,0,.5)',
-
-                headerBg: '#0d6efd',
-                headerText: '#ffffff',
-
-                messagesBg: '#1a1a2e',
-
-                botMessageBg: '#2d2d44',
-                botMessageText: '#e0e0e0',
-
-                userMessageBg: '#0d6efd',
-                userMessageText: '#ffffff',
-
-                inputRowBg: '#0d0d1a',
-
-                inputBg: '#2d2d44',
-                inputText: '#ffffff',
-                inputPlaceholder: '#888',
-                inputBorder: 'transparent',
-                inputFocusBorder: 'rgba(13,110,253,.55)',
-
-                chipBg: 'rgba(13,110,253,.1)',
-                chipBgHover: 'rgba(13,110,253,.3)',
-                chipBorder: 'rgba(13,110,253,.4)',
-                chipText: '#aaa',
-                chipTextHover: '#ffffff',
-
-                link: '#00e5ff',
-
-                typingDot: '#6c8ebf',
-
-                labelText: 'inherit'
-            },
-
             debug: true
         };
 
         function hexToRgb(hex) {
             hex = String(hex || '').replace('#', '');
-
-            if (hex.length === 3) {
-                hex = hex.split('').map(function (x) {
-                    return x + x;
-                }).join('');
-            }
-
-            var num = parseInt(hex, 16);
-
-            return {
-                r: (num >> 16) & 255,
-                g: (num >> 8) & 255,
-                b: num & 255
-            };
+            if (hex.length === 3) hex = hex.split('').map(function (x) { return x + x; }).join('');
+            var num = parseInt(hex, 16); return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
         }
-
         function rgba(hex, alpha) {
-            var rgb = hexToRgb(hex);
-            return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + alpha + ')';
+            var rgb = hexToRgb(hex); return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + alpha + ')';
         }
-
         function setWidgetAccent(color) {
             if (!window.LaserChatWidget) return;
-
             LaserChatWidget.setConfig({
                 accentColor: color,
-                colors: {
-                    accent: color,
-
-                    toggleBg: color,
-                    headerBg: color,
-                    userMessageBg: color,
-
-                    toggleShadow: rgba(color, 0.4),
-                    waveColor: rgba(color, 0.55),
-
-                    inputFocusBorder: rgba(color, 0.55),
-
-                    chipBg: rgba(color, 0.1),
-                    chipBgHover: rgba(color, 0.3),
-                    chipBorder: rgba(color, 0.4)
-                }
+                colors: { accent: color, toggleBg: color, headerBg: color, userMessageBg: color, toggleShadow: rgba(color, 0.4), waveColor: rgba(color, 0.55), inputFocusBorder: rgba(color, 0.55), chipBg: rgba(color, 0.1), chipBgHover: rgba(color, 0.3), chipBorder: rgba(color, 0.4) }
             });
         }
-
         function setWidgetIcon(icon) {
-    if (!window.LaserChatWidget) return;
-
-    LaserChatWidget.setConfig({
-        icons: {
-            open: icon,
-            close: '✕',
-            send: '➤'
+            if (!window.LaserChatWidget) return;
+            LaserChatWidget.setConfig({ icons: { open: icon, close: '✕', send: '➤' } });
         }
-    });
-
-    // Только для демо-страницы:
-    // вручную обновляем видимую иконку круглой кнопки,
-    // если чат сейчас закрыт.
-    var state = LaserChatWidget.getState ? LaserChatWidget.getState() : null;
-    var iconEl = document.querySelector('.lsw-toggle-icon');
-
-    if (iconEl && (!state || !state.isOpen)) {
-        iconEl.textContent = icon;
-    }
-}
+        function setWidgetTheme(theme) {
+            if (!window.LaserChatWidget) return;
+            LaserChatWidget.setConfig({ theme: theme, colors: {} });
+        }
+        function setWidgetAvatar(url) {
+            if (!window.LaserChatWidget) return;
+            document.getElementById('emoji-icons-section').style.opacity = url ? '0.3' : '1';
+            document.getElementById('emoji-icons-section').style.pointerEvents = url ? 'none' : 'auto';
+            LaserChatWidget.setConfig({ avatarUrl: url });
+        }
+        function setWidgetText(field, value) {
+            if (!window.LaserChatWidget) return;
+            var textsUpdate = {}; textsUpdate[field] = value;
+            LaserChatWidget.setConfig({ texts: textsUpdate });
+        }
     </script>
-
     <script src="../widget/laser-chat-widget.js"></script>
-
 </body>
 </html>
