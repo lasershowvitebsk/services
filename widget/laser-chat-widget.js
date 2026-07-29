@@ -20,7 +20,16 @@
         verificationRequired: '⏳ Проверка безопасности...',
         verificationFailed: 'Проверка не пройдена. Попробуйте снова.',
         verificationExpired: 'Время проверки истекло. Попробуйте еще раз.',
-        retry: 'Повторить проверку'
+        retry: 'Повторить проверку',
+        // Дружелюбные фразы на случай, когда виджет не дождался ответа
+        // (таймаут, обрыв сети, отменённый запрос). Показывается случайная.
+        // Тон совпадает с getFallbackAnswer() в воркере.
+        fallbackMessages: [
+            'Извините, не успел обработать запрос. Попробуйте переформулировать вопрос или напишите чуть позже 🙏',
+            'Что-то пошло не так. Попробуйте задать вопрос иначе или зайдите через минуту 😊',
+            'Временные неполадки — попробуйте ещё раз или оставьте заявку на сайте.',
+            'Не смог получить ответ прямо сейчас. Напишите вопрос иначе или свяжитесь с менеджером напрямую.'
+        ]
     };
 
     var DEFAULT_DARK_COLORS = {
@@ -115,7 +124,7 @@
         closeOnEsc: true,
         focusOnOpen: true,
         maxMessageLength: 500,
-        requestTimeout: 30000,
+        requestTimeout: 45000,
         showChips: true,
         chips: null,
         payloadExtra: null,
@@ -175,6 +184,10 @@
         config = config || {};
         config.position = normalizePosition(config.position);
         config.texts = deepMerge(DEFAULT_TEXTS, config.texts || {});
+        // Гарантируем, что fallbackMessages — непустой массив.
+        if (!Array.isArray(config.texts.fallbackMessages) || !config.texts.fallbackMessages.length) {
+            config.texts.fallbackMessages = DEFAULT_TEXTS.fallbackMessages.slice();
+        }
         
         var baseColors = config.theme === 'light' ? DEFAULT_LIGHT_COLORS : DEFAULT_DARK_COLORS;
         config.colors = deepMerge(baseColors, config.colors || {});
@@ -206,7 +219,7 @@
         config.mobileWindowSideOffset = normalizeCssSize(config.mobileWindowSideOffset, '8px');
 
         config.zIndex = parseInt(config.zIndex, 10) || 9999;
-        config.requestTimeout = parseInt(config.requestTimeout, 10) || 30000;
+        config.requestTimeout = parseInt(config.requestTimeout, 10) || 45000;
         config.maxMessageLength = parseInt(config.maxMessageLength, 10) || 500;
         config.chips = normalizeChips(config);
 
@@ -358,7 +371,6 @@
             '  --chat-toggle-text: #ffffff;' +
             '  --chat-toggle-shadow: var(--shadow-blue-soft);' +
             '  --chat-wave-color: rgba(13, 110, 253, 0.55);' +
-            '  --chat-window-shadow: rgba(0, 0, 0, 0.5);' +
             '  --chat-header-bg: var(--color-primary);' +
             '  --chat-header-text: #ffffff;' +
             '  --chat-bot-bg: #2d2d44;' +
@@ -574,7 +586,8 @@
     }
 
     function createMsgEl(msg) {
-        var div = document.createElement('div'); div.className = 'message ' + (msg.isUser ? 'user' : 'bot');
+        var div = document.createElement('div');
+        div.className = 'message ' + (msg.isUser ? 'user' : 'bot');
         var lbl = document.createElement('strong'); lbl.textContent = (msg.isUser ? L.you : L.bot) + ': ';
         var body = document.createElement('span'); body.innerHTML = formatMessage(msg.text);
         div.appendChild(lbl); div.appendChild(body); return div;
@@ -601,26 +614,71 @@
         if (els.chips) { Array.prototype.forEach.call(els.chips, function(c) { c.disabled = v; }); }
     }
 
+    // Возвращает случайную дружелюбную фразу-заглушку.
+    // Используется, когда виджет не дождался ответа (таймаут/сеть/abort).
+    function getFallbackMessage() {
+        var arr = (L && Array.isArray(L.fallbackMessages) && L.fallbackMessages.length)
+            ? L.fallbackMessages
+            : DEFAULT_TEXTS.fallbackMessages;
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    // Форматирует объект ошибки в понятный пользователю текст.
+    function formatErrorText(e) {
+        var msg = (e && e.message) ? e.message : '';
+
+        // 1. Rate limit (429) — у сервера уже готов человекочитаемый текст.
+        if (e && e.httpStatus === 429) {
+            return msg || getFallbackMessage();
+        }
+
+        // 2. Таймаут / отменённый запрос / обрыв сети — показываем
+        //    дружелюбную фразу-заглушку в стиле воркера (getFallbackAnswer).
+        if (e && (e.isTimeout ||
+                  e.name === 'AbortError' ||
+                  e.name === 'TypeError' ||           // fetch network error
+                  /aborted|failed to fetch|networkerror|load failed/i.test(msg))) {
+            return getFallbackMessage();
+        }
+
+        // 3. Явные серверные сообщения (data.error) — показываем как есть.
+        if (e && e.serverMessage) {
+            return msg || getFallbackMessage();
+        }
+
+        // 4. Всё остальное — тоже дружелюбная заглушка (без технического текста).
+        return getFallbackMessage();
+    }
+
     function sendMessage() {
         if (!els.input) return;
         var text = els.input.value.trim(); if (!text || state.isLoading) return;
         els.input.value = ''; appendMsg({ text: text, isUser: true });
         setLoading(true); showTyping();
-        callWorker({ message: text, language: 'ru' }).then(function(reply) { hideTyping(); appendMsg({ text: reply, isUser: false }); }).catch(function(e) { hideTyping(); appendMsg({ text: L.error + ': ' + e.message, isUser: false }); }).finally(function() { setLoading(false); });
+        callWorker({ message: text, language: 'ru' })
+            .then(function(reply) { hideTyping(); appendMsg({ text: reply, isUser: false }); })
+            .catch(function(e) { hideTyping(); appendMsg({ text: formatErrorText(e), isUser: false }); })
+            .finally(function() { setLoading(false); });
     }
 
     function sendChip(chipId, label) {
         if (state.isLoading) return;
         appendMsg({ text: label || chipId, isUser: true });
         setLoading(true); showTyping();
-        callWorker({ message: chipId, chipId: chipId, language: 'ru' }).then(function(reply) { hideTyping(); appendMsg({ text: reply, isUser: false }); }).catch(function(e) { hideTyping(); appendMsg({ text: L.error + ': ' + e.message, isUser: false }); }).finally(function() { setLoading(false); });
+        callWorker({ message: chipId, chipId: chipId, language: 'ru' })
+            .then(function(reply) { hideTyping(); appendMsg({ text: reply, isUser: false }); })
+            .catch(function(e) { hideTyping(); appendMsg({ text: formatErrorText(e), isUser: false }); })
+            .finally(function() { setLoading(false); });
     }
 
     function withTimeout(fetchPromise, timeoutMs, controller) {
         var timeoutId;
         var timeoutPromise = new Promise(function(_, reject) {
             timeoutId = setTimeout(function() {
-                if (controller && controller.abort) controller.abort(); reject(new Error('Превышено время ожидания ответа'));
+                if (controller && controller.abort) controller.abort();
+                var e = new Error('timeout');
+                e.isTimeout = true; // помечаем — formatErrorText покажет заглушку
+                reject(e);
             }, timeoutMs);
         });
         return Promise.race([fetchPromise, timeoutPromise]).finally(function() { clearTimeout(timeoutId); });
@@ -649,9 +707,18 @@
     function onTurnstileVerified(token) {
         var verifyUrl = CONFIG.workerUrl.replace(/\/$/, '') + '/verify';
         fetch(verifyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ turnstileToken: token }) })
-        .then(function(res) { if (!res.ok) throw new Error('Verify failed HTTP ' + res.status); return res.json(); })
+        .then(function(res) {
+            return res.json().catch(function() { return null; }).then(function(data) {
+                if (!res.ok) {
+                    var e = new Error((data && data.error) || ('Verify failed HTTP ' + res.status));
+                    if (data && data.error) e.serverMessage = true;
+                    throw e;
+                }
+                return data;
+            });
+        })
         .then(function(data) {
-            if (!data.success || !data.sessionToken) throw new Error(data.error || 'Verification failed');
+            if (!data || !data.success || !data.sessionToken) throw new Error((data && data.error) || 'Verification failed');
             state.sessionToken = data.sessionToken; state.verificationInProgress = false;
             if (els.turnstileWrap) els.turnstileWrap.style.display = 'none';
             if (state.pendingRequest) {
@@ -681,14 +748,69 @@
         var controller = null;
         var fetchOptions = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) };
         if (window.AbortController) { controller = new AbortController(); fetchOptions.signal = controller.signal; }
+
         return withTimeout(fetch(url, fetchOptions), CONFIG.requestTimeout, controller)
             .then(function(res) {
-                if (res.status === 401 || res.status === 403) { var err = new Error('HTTP ' + res.status); err.requiresVerification = true; throw err; }
-                if (!res.ok) throw new Error('HTTP ' + res.status); return res.json();
+                // Всегда пытаемся прочитать JSON-тело — там может быть
+                // человекочитаемое поле error (например, при 429 rate limit).
+                return res.json()
+                    .catch(function() { return null; })
+                    .then(function(data) {
+                        // 401/403 → требуется повторная верификация Turnstile
+                        if (res.status === 401 || res.status === 403) {
+                            var err401 = new Error((data && data.error) || ('HTTP ' + res.status));
+                            err401.requiresVerification = true;
+                            err401.httpStatus = res.status;
+                            if (data && data.error) err401.serverMessage = true;
+                            throw err401;
+                        }
+
+                        // Любой другой не-OK статус (429, 500, 400 ...)
+                        if (!res.ok) {
+                            var httpErr = new Error((data && data.error) ? data.error : ('HTTP ' + res.status));
+                            httpErr.httpStatus = res.status;
+                            if (data && data.error) httpErr.serverMessage = true;
+                            if (data && data.requiresVerification) httpErr.requiresVerification = true;
+                            throw httpErr;
+                        }
+
+                        // OK, но тело не распарсилось
+                        if (!data) {
+                            throw new Error('Empty or invalid response');
+                        }
+
+                        // Сервер просит верификацию (200 + requiresVerification)
+                        if (data.requiresVerification) {
+                            var errV = new Error(data.error || 'Verification required');
+                            errV.requiresVerification = true;
+                            if (data.error) errV.serverMessage = true;
+                            throw errV;
+                        }
+
+                        if (!data.success) {
+                            var errS = new Error(data.error || 'Unknown error');
+                            if (data.error) errS.serverMessage = true;
+                            throw errS;
+                        }
+
+                        return data.reply;
+                    });
             })
-            .then(function(data) {
-                if (data.requiresVerification) { var err = new Error('Verification required'); err.requiresVerification = true; throw err; }
-                if (!data.success) throw new Error(data.error || 'Unknown error'); return data.reply;
+            .catch(function(err) {
+                // Единая точка нормализации ошибок сети/таймаута/abort.
+                // Пробрасываем "рабочие" флаги (верификация/статус/сервер)
+                // без изменений — их обработает вызывающий код / formatErrorText.
+                if (err && (err.requiresVerification || err.httpStatus || err.serverMessage || err.isTimeout)) {
+                    throw err;
+                }
+                // Системный AbortError (controller.abort) или network error —
+                // помечаем как таймаут, чтобы показать дружелюбную заглушку.
+                if (err && (err.name === 'AbortError' || /aborted/i.test(err.message || ''))) {
+                    var t = new Error('timeout');
+                    t.isTimeout = true;
+                    throw t;
+                }
+                throw err; // прочее уйдёт в formatErrorText → заглушка
             });
     }
 
