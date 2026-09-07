@@ -312,16 +312,13 @@
       if (days.length) {
         html += '<div class="chart-wrap"><canvas id="daysChart"></canvas></div>';
         html += '<table class="days-table"><thead><tr>' +
-          '<th>Дата</th><th>Сообщений</th><th>Входные</th><th>Исходящие</th><th>Всего токенов</th><th>Ошибки</th><th>Расход</th>' +
+          '<th>Дата</th><th>Сообщений</th><th>Исх. + вх. токенов</th><th>Затраты</th>' +
           '</tr></thead><tbody>';
         days.slice().reverse().forEach(function(d) {
           html += '<tr>' +
             '<td>' + escapeHtml(d.date) + '</td>' +
             '<td>' + fmtNum(d.messages) + '</td>' +
-            '<td>' + fmtNum(d.inputTokens) + '</td>' +
-            '<td>' + fmtNum(d.outputTokens) + '</td>' +
             '<td>' + fmtNum(d.totalTokens) + '</td>' +
-            '<td>' + fmtNum(d.errors) + '</td>' +
             '<td>' + fmtUSD(d.costUSD) + '</td>' +
             '</tr>';
         });
