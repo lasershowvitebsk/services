@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaserShow — Статистика вашего чат-бота</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: radial-gradient(circle at 50% 0%, #16213e 0%, #0a0a14 60%);
+    color: #e8e8f0; min-height: 100vh;
+    padding: 40px 16px 60px; display: flex; flex-direction: column; align-items: center; gap: 22px;
+  }
+  h1 { color: #fff; font-size: 1.6rem; text-align: center; }
+  h1 span { color: #00e5ff; text-shadow: 0 0 12px rgba(0,229,255,.6); }
+  .sub { color: #8a92ab; font-size: .92rem; text-align: center; max-width: 520px; }
+
+  .auth-card {
+    width: min(480px, 100%); background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.09); border-radius: 18px;
+    padding: 22px; display: flex; flex-direction: column; gap: 14px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.35);
+  }
+  .auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-group label { display: block; font-size: .78rem; color: #9aa4bb; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .field-group input {
+    width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.04); color: #fff; outline: none; font-size: .95rem; letter-spacing: .02em;
+  }
+  .field-group input:focus { border-color: #00e5ff; }
+  .auth-card button {
+    padding: 12px 16px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #0d6efd, #00b8d9); color: #fff;
+    font-weight: 700; font-size: .95rem; cursor: pointer; transition: transform .15s, filter .15s;
+  }
+  .auth-card button:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .auth-card button:disabled { opacity: .5; cursor: not-allowed; }
+
+  .status-msg { font-size: .82rem; text-align: center; min-height: 18px; }
+  .status-msg.err { color: #ff8a8a; }
+  .status-msg.ok { color: #7fe0a0; }
+  .status-msg.loading { color: #eab308; }
+
+  .dashboard { width: min(880px, 100%); display: none; flex-direction: column; gap: 22px; }
+  .dashboard.visible { display: flex; }
+
+  .hero-row {
+    display: grid; grid-template-columns: 260px 1fr; gap: 24px; align-items: center;
+    background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px; padding: 26px; box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  }
+  .gauge-wrap { position: relative; width: 220px; height: 220px; margin: 0 auto; }
+  .gauge-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+  }
+  .gauge-center .pct { font-size: 2.1rem; font-weight: 800; color: #fff; }
+  .gauge-center .label { font-size: .76rem; color: #9aa4bb; text-transform: uppercase; letter-spacing: .03em; margin-top: 2px; }
+
+  .hero-info h2 { font-size: 1.1rem; color: #fff; margin-bottom: 10px; word-break: break-word; }
+  .hero-info .row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: .92rem; gap: 10px; }
+  .hero-info .row:last-child { border-bottom: none; }
+  .hero-info .row span:first-child { color: #9aa4bb; flex-shrink: 0; }
+  .hero-info .row span:last-child { font-weight: 700; color: #fff; text-align: right; word-break: break-word; }
+
+  .section-label {
+    font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: #7d87a3;
+    text-align: center; font-weight: 600; margin-bottom: -4px;
+  }
+
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+  .card {
+    background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 16px; padding: 18px; text-align: center;
+    transition: transform .15s;
+  }
+  .card:hover { transform: translateY(-2px); }
+  .card .icon { font-size: 1.6rem; margin-bottom: 8px; }
+  .card .value { font-size: 1.6rem; font-weight: 800; color: #00e5ff; }
+  .card .label { font-size: .78rem; color: #9aa4bb; margin-top: 4px; text-transform: uppercase; letter-spacing: .03em; }
+
+  #todaySection { display: flex; flex-direction: column; gap: 10px; }
+  #todaySection.hidden { display: none; }
+
+  .footer-note { text-align: center; color: #565f78; font-size: .78rem; }
+
+  @media (max-width: 700px) {
+    .hero-row { grid-template-columns: 1fr; text-align: center; }
+    .auth-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+  <h1>🤖 Статистика вашего <span>ИИ-ассистента</span></h1>
+  <p class="sub">Актуальные данные по количеству обращений и загрузке чат-бота LaserShow. Можно выбрать любой месяц.</p>
+
+  <div class="auth-card" id="authCard">
+    <div class="auth-grid">
+      <div class="field-group">
+        <label>Ключ доступа</label>
+        <input type="password" id="secretKey" placeholder="Введите ключ доступа">
+      </div>
+      <div class="field-group">
+        <label>Месяц</label>
+        <input type="month" id="monthPicker">
+      </div>
+    </div>
+    <button id="loadBtn">Показать статистику</button>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+
+  <div class="dashboard" id="dashboard">
+    <div class="hero-row">
+      <div class="gauge-wrap">
+        <canvas id="gaugeChart"></canvas>
+        <div class="gauge-center">
+          <div class="pct" id="gaugePct">0%</div>
+          <div class="label">лимита за месяц</div>
+        </div>
+      </div>
+      <div class="hero-info">
+        <h2 id="monthTitle">Статистика за месяц</h2>
+        <div class="row"><span>Модель ИИ</span><span id="modelName">—</span></div>
+        <div class="row"><span>Обращений использовано</span><span id="msgUsage">—</span></div>
+        <div class="row"><span>Токенов обработано</span><span id="tokUsage">—</span></div>
+        <div class="row"><span>Обновлено</span><span id="updatedAt">—</span></div>
+      </div>
+    </div>
+
+    <div class="section-label" id="monthSectionLabel">За выбранный месяц</div>
+    <div class="cards-grid">
+      <div class="card"><div class="icon">💬</div><div class="value" id="cardMonthMsgs">0</div><div class="label">Обращений за месяц</div></div>
+      <div class="card"><div class="icon">🔤</div><div class="value" id="cardMonthTokens">0</div><div class="label">Токенов за месяц</div></div>
+    </div>
+
+    <div id="todaySection">
+      <div class="section-label">Сегодня</div>
+      <div class="cards-grid">
+        <div class="card"><div class="icon">📅</div><div class="value" id="cardTodayMsgs">0</div><div class="label">Обращений сегодня</div></div>
+        <div class="card"><div class="icon">⚡</div><div class="value" id="cardTodayTokens">0</div><div class="label">Токенов сегодня</div></div>
+      </div>
+    </div>
+
+    <p class="footer-note">Данные обновляются автоматически из системы мониторинга LaserShow AI.</p>
+  </div>
+
+  <script>
+  (function(){
+    'use strict';
+
+    // Настрой один раз под свой воркер — клиенту не нужно ничего вводить, кроме ключа
+    var WORKER_URL = 'https://laser-api.vitalitalipski.workers.dev';
+    var LS_KEY = 'lsw_client_stats_v1';
+    var currentMonthStr = new Date().toISOString().slice(0, 7);
+
+    var elSecret   = document.getElementById('secretKey');
+    var elMonth    = document.getElementById('monthPicker');
+    var elLoadBtn  = document.getElementById('loadBtn');
+    var elStatus   = document.getElementById('statusMsg');
+    var elDash     = document.getElementById('dashboard');
+    var elToday    = document.getElementById('todaySection');
+    var gaugeChart = null;
+
+    function fmtNum(n) { return (typeof n === 'number' ? n : 0).toLocaleString('ru-RU'); }
+    function setStatus(cls, text) { elStatus.className = 'status-msg' + (cls ? ' ' + cls : ''); elStatus.textContent = text || ''; }
+
+    function loadSaved() {
+      try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; }
+      catch(e) { return {}; }
+    }
+    function save() {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify({
+          secret: elSecret.value.trim(),
+          month: elMonth.value.trim()
+        }));
+      } catch(e) {}
+    }
+
+    var urlParams = new URLSearchParams(window.location.search);
+    var saved = loadSaved();
+    elSecret.value = urlParams.get('secret') || saved.secret || '';
+    elMonth.value  = urlParams.get('month')  || saved.month  || currentMonthStr;
+
+    function renderGauge(rawPct) {
+      var pct = typeof rawPct === 'number' ? rawPct : parseFloat(rawPct);
+      if (isNaN(pct)) pct = 0;
+      pct = Math.min(100, Math.max(0, pct));
+
+      var color = pct >= 90 ? '#ef4444' : pct >= 70 ? '#eab308' : '#00e5ff';
+      document.getElementById('gaugePct').textContent = pct.toFixed(0) + '%';
+      document.getElementById('gaugePct').style.color = color;
+
+      var ctx = document.getElementById('gaugeChart');
+      if (gaugeChart) gaugeChart.destroy();
+      gaugeChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [pct, 100 - pct],
+            backgroundColor: [color, 'rgba(255,255,255,.07)'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          cutout: '78%',
+          responsive: true, maintainAspectRatio: true,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          animation: { animateRotate: true, duration: 800 }
+        }
+      });
+    }
+
+    function renderData(data) {
+      var tm = data.thisMonth || {};
+      var td = data.today || {};
+      var isCurrentMonth = data.month === currentMonthStr;
+
+      document.getElementById('monthTitle').textContent = 'Статистика за ' + (data.month || '');
+      document.getElementById('modelName').textContent = data.model || '—';
+      document.getElementById('msgUsage').textContent = fmtNum(tm.messages) + ' / ' + fmtNum(tm.limit);
+      document.getElementById('tokUsage').textContent = fmtNum(tm.totalTokens);
+      document.getElementById('updatedAt').textContent = data.generatedAt ? new Date(data.generatedAt).toLocaleString('ru-RU') : '—';
+
+      document.getElementById('cardMonthMsgs').textContent = fmtNum(tm.messages);
+      document.getElementById('cardMonthTokens').textContent = fmtNum(tm.totalTokens);
+      document.getElementById('cardTodayMsgs').textContent = fmtNum(td.messages);
+      document.getElementById('cardTodayTokens').textContent = fmtNum(td.totalTokens);
+
+      elToday.classList.toggle('hidden', !isCurrentMonth);
+
+      renderGauge(tm.pct);
+
+      elDash.classList.add('visible');
+    }
+
+    function loadStats() {
+      var secret = elSecret.value.trim();
+      var month = elMonth.value.trim();
+
+      if (!secret) { setStatus('err', 'Введите ключ доступа'); return; }
+
+      save();
+      setStatus('loading', 'Загрузка данных...');
+      elLoadBtn.disabled = true;
+
+      var url = WORKER_URL.replace(/\/$/, '') + '/client-stats?secret=' + encodeURIComponent(secret) +
+                (month ? '&month=' + encodeURIComponent(month) : '');
+
+      fetch(url, { method: 'GET' })
+        .then(function(res) {
+          if (res.status === 401) { throw new Error('Неверный ключ доступа'); }
+          return res.json().then(function(data) {
+            if (!res.ok) { throw new Error((data && data.error) || ('HTTP ' + res.status)); }
+            if (!data.success) { throw new Error(data.error || 'Ошибка ответа сервера'); }
+            return data;
+          });
+        })
+        .then(function(data) {
+          setStatus('ok', 'Данные обновлены');
+          renderData(data);
+        })
+        .catch(function(err) {
+          var msg = err.message || 'Не удалось загрузить данные';
+          if (err.name === 'TypeError' && /fetch/i.test(msg)) {
+            msg = 'Не удалось подключиться к серверу. Попробуйте позже.';
+          }
+          setStatus('err', msg);
+        })
+        .finally(function() { elLoadBtn.disabled = false; });
+    }
+
+    elLoadBtn.addEventListener('click', loadStats);
+    elMonth.addEventListener('change', loadStats);
+    elSecret.addEventListener('keydown', function(e) { if (e.key === 'Enter') loadStats(); });
+
+    if (elSecret.value) loadStats();
+    else setStatus('', 'Введите ключ доступа, чтобы посмотреть статистику');
+  })();
+  </script>
+</body>
+</html>

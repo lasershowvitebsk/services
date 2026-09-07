@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaserShow — Админ-статистика</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0f0f1a; color: #e0e0e0; min-height: 100vh;
+    padding: 32px 16px 60px; display: flex; flex-direction: column; align-items: center; gap: 20px;
+  }
+  h1 { color: #00e5ff; font-size: 1.7rem; text-align: center; text-shadow: 0 0 10px #00e5ff; }
+  .sub { color: #888; font-size: .9rem; text-align: center; max-width: 640px; }
+
+  .panel {
+    width: min(1100px, 100%); background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08); border-radius: 16px;
+    padding: 20px; box-shadow: 0 16px 45px rgba(0,0,0,.25);
+  }
+
+  .auth-bar { display: grid; grid-template-columns: 1.4fr 1fr .8fr auto auto; gap: 10px; align-items: end; }
+  .field label { display: block; font-size: .78rem; color: #9aa4bb; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .03em; }
+  .field input {
+    width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.04); color: #e0e0e0; outline: none; font-size: .9rem;
+  }
+  .field input:focus { border-color: #0d6efd; }
+  .btn {
+    padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(13,110,253,.5);
+    background: rgba(13,110,253,.2); color: #fff; cursor: pointer; font-size: .88rem;
+    font-weight: 600; transition: .15s; white-space: nowrap;
+  }
+  .btn:hover { background: rgba(13,110,253,.4); }
+  .btn.ghost { background: transparent; border-color: rgba(255,255,255,.15); color: #aaa; }
+  .btn.ghost:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .status-line { margin-top: 10px; font-size: .82rem; display: flex; align-items: center; gap: 8px; min-height: 18px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #555; flex-shrink: 0; }
+  .dot.ok { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+  .dot.err { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+  .dot.loading { background: #eab308; box-shadow: 0 0 8px #eab308; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .status-line.err-text { color: #ff8080; }
+  .status-line.ok-text { color: #7fe0a0; }
+
+  .auto-row { display:flex; align-items:center; gap:6px; font-size:.8rem; color:#9aa4bb; margin-top:8px; }
+
+  .section-title {
+    font-size: .82rem; text-transform: uppercase; letter-spacing: .05em; color: #bfc8da;
+    margin: 26px 0 12px; text-align: center; font-weight: 600;
+  }
+  .subgroup-title {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: #6b7690;
+    margin: 14px 0 8px; font-weight: 600;
+  }
+
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .card {
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .card .label { font-size: .74rem; color: #8a93aa; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
+  .card .value {
+    font-size: 1.5rem; font-weight: 700; color: #fff;
+    word-break: break-word; overflow-wrap: anywhere;
+  }
+  .card .value.accent { color: #00e5ff; }
+  .card .value.warn { color: #eab308; }
+  .card .value.danger { color: #ef4444; }
+  .card .value.small { font-size: 1.05rem; line-height: 1.3; }
+
+  .meta-grid .card {
+    background: rgba(0,229,255,.035);
+    border-color: rgba(0,229,255,.15);
+  }
+
+  .progress-wrap { margin-bottom: 14px; }
+  .progress-head { display: flex; justify-content: space-between; font-size: .82rem; color: #ccc; margin-bottom: 5px; }
+  .progress-bar-bg { height: 10px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 6px; transition: width .4s ease; background: #22c55e; }
+  .progress-bar-fill.warn { background: #eab308; }
+  .progress-bar-fill.danger { background: #ef4444; }
+
+  .channels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .channel-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 12px 14px; }
+  .channel-card h4 { font-size: .85rem; color: #00e5ff; margin-bottom: 8px; }
+  .channel-card table { width: 100%; font-size: .82rem; }
+  .channel-card td { padding: 3px 0; color: #ccc; }
+  .channel-card td:last-child { text-align: right; font-weight: 600; color: #fff; }
+
+  table.days-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: 10px; }
+  table.days-table th, table.days-table td { padding: 8px 10px; text-align: right; border-bottom: 1px solid rgba(255,255,255,.06); }
+  table.days-table th:first-child, table.days-table td:first-child { text-align: left; }
+  table.days-table th { color: #9aa4bb; font-weight: 600; font-size: .74rem; text-transform: uppercase; }
+  table.days-table td { color: #ddd; }
+
+  .chart-wrap { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 14px; margin-top: 10px; height: 260px; }
+
+  details.raw { margin-top: 20px; }
+  details.raw summary { cursor: pointer; color: #888; font-size: .82rem; user-select: none; }
+  details.raw pre {
+    margin-top: 10px; background: #05050a; border: 1px solid rgba(255,255,255,.08);
+    border-radius: 8px; padding: 12px; font-size: .78rem; color: #9fe0a0; overflow-x: auto; max-height: 400px;
+  }
+
+  .empty-state { text-align: center; color: #777; padding: 40px 10px; font-size: .95rem; }
+
+  @media (max-width: 900px) {
+    .auth-bar { grid-template-columns: 1fr 1fr; }
+    .channels-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .auth-bar { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+  <h1>📊 LaserShow — Админ-статистика</h1>
+  <p class="sub">Полный мониторинг сообщений, токенов и расходов OpenRouter из KV-хранилища вор��ера.</p>
+
+  <div class="panel">
+    <div class="auth-bar">
+      <div class="field">
+        <label>Worker URL</label>
+        <input type="text" id="workerUrl" placeholder="https://laser-api.xxx.workers.dev">
+      </div>
+      <div class="field">
+        <label>Секретный ключ (STATS_SECRET)</label>
+        <input type="password" id="secretKey" placeholder="секрет админа">
+      </div>
+      <div class="field">
+        <label>Месяц</label>
+        <input type="month" id="monthPicker">
+      </div>
+      <button class="btn" id="loadBtn">Обновить</button>
+      <button class="btn ghost" id="clearBtn">Сброс</button>
+    </div>
+
+    <div class="status-line" id="statusLine"><span class="dot" id="statusDot"></span><span id="statusText">Не подключено</span></div>
+    <label class="auto-row"><input type="checkbox" id="autoRefresh"> Автообновление каждые 30 сек</label>
+  </div>
+
+  <div id="content" style="width:min(1100px,100%);"></div>
+
+  <script>
+  (function(){
+    'use strict';
+
+    var LS_KEY = 'lsw_stats_admin_v1';
+    var elWorkerUrl = document.getElementById('workerUrl');
+    var elSecret    = document.getElementById('secretKey');
+    var elMonth     = document.getElementById('monthPicker');
+    var elLoadBtn   = document.getElementById('loadBtn');
+    var elClearBtn  = document.getElementById('clearBtn');
+    var elStatusDot = document.getElementById('statusDot');
+    var elStatusText= document.getElementById('statusText');
+    var elAuto      = document.getElementById('autoRefresh');
+    var elContent   = document.getElementById('content');
+
+    var autoTimer = null;
+    var chartInstance = null;
+
+    function loadSaved() {
+      try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; }
+      catch(e) { return {}; }
+    }
+    function save() {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify({
+          workerUrl: elWorkerUrl.value.trim(),
+          secret: elSecret.value.trim()
+        }));
+      } catch(e) {}
+    }
+
+    var urlParams = new URLSearchParams(window.location.search);
+    var saved = loadSaved();
+    elWorkerUrl.value = urlParams.get('workerUrl') || saved.workerUrl || 'https://laser-api.vitalitalipski.workers.dev';
+    elSecret.value    = urlParams.get('secret')    || saved.secret    || '';
+    elMonth.value     = urlParams.get('month')     || new Date().toISOString().slice(0,7);
+
+    // ---------- helpers ----------
+    function fmtNum(n) { return (typeof n === 'number' ? n : 0).toLocaleString('ru-RU'); }
+
+    function fmtUSD(n) {
+      var num = typeof n === 'number' ? n : parseFloat(n);
+      if (isNaN(num)) num = 0;
+      return '$' + num.toFixed(4);
+    }
+
+    function parsePct(raw) {
+      var num = typeof raw === 'number' ? raw : parseFloat(raw);
+      return isNaN(num) ? 0 : num;
+    }
+
+    function pctClass(p) { if (p >= 90) return 'danger'; if (p >= 70) return 'warn'; return ''; }
+
+    function setStatus(state, text) {
+      elStatusDot.className = 'dot' + (state ? ' ' + state : '');
+      elStatusText.textContent = text;
+      elStatusText.parentElement.className = 'status-line' + (state === 'err' ? ' err-text' : state === 'ok' ? ' ok-text' : '');
+    }
+    function safe(obj, path, fallback) {
+      try {
+        var parts = path.split('.'); var cur = obj;
+        for (var i = 0; i < parts.length; i++) { if (cur == null) return fallback; cur = cur[parts[i]]; }
+        return cur == null ? fallback : cur;
+      } catch(e) { return fallback; }
+    }
+    function escapeHtml(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function card(label, value, cls) {
+      return '<div class="card"><div class="label">' + escapeHtml(label) + '</div><div class="value ' + (cls||'') + '">' + value + '</div></div>';
+    }
+
+    function renderChannelTable(title, obj) {
+      obj = obj || {};
+      var rows = [
+        ['Сообщений', fmtNum(obj.calls)],
+        ['Входные токены', fmtNum(obj.inputTokens)],
+        ['Исходящие токены', fmtNum(obj.outputTokens)],
+        ['Ошибки', fmtNum(obj.errors)]
+      ];
+      var html = '<div class="channel-card"><h4>' + title + '</h4><table>';
+      rows.forEach(function(r) { html += '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>'; });
+      html += '</table></div>';
+      return html;
+    }
+
+    function renderProgress(label, used, limit, rawPct) {
+      var pctVal = Math.min(100, Math.max(0, parsePct(rawPct)));
+      var cls = pctClass(pctVal);
+      var displayPct = (typeof rawPct === 'string' && rawPct.indexOf('n/a') !== -1)
+        ? 'н/д'
+        : pctVal.toFixed(1) + '%';
+      return '' +
+        '<div class="progress-wrap">' +
+          '<div class="progress-head"><span>' + label + '</span><span>' + fmtNum(used) + ' / ' + fmtNum(limit) + ' (' + displayPct + ')</span></div>' +
+          '<div class="progress-bar-bg"><div class="progress-bar-fill ' + cls + '" style="width:' + pctVal + '%"></div></div>' +
+        '</div>';
+    }
+
+    function renderAll(data) {
+      var tm = data.thisMonth || {};
+      var td = data.today || {};
+      var lim = data.limits || {};
+      var monthTotal = tm.total || {};
+      var todayTotal = td.total || {};
+      var monthLimits = tm.limits || {};
+
+      var html = '';
+
+      // ===== Итоги за месяц =====
+      html += '<div class="section-title">Итоги за месяц: ' + escapeHtml(data.month || '') + '</div>';
+
+      html += '<div class="subgroup-title">Активность</div>';
+      html += '<div class="cards-grid">';
+      html += card('Сообщений', fmtNum(monthTotal.calls), '');
+      html += card('Входные токены', fmtNum(monthTotal.inputTokens), '');
+      html += card('Исходящие токены', fmtNum(monthTotal.outputTokens), '');
+      html += card('Всего токенов', fmtNum(monthTotal.totalTokens), 'accent');
+      html += '</div>';
+
+      html += '<div class="subgroup-title">Инфо</div>';
+      html += '<div class="cards-grid meta-grid">';
+      html += card('Модель ИИ', escapeHtml(data.model || '—'), 'accent small');
+      html += card('Ошибки', fmtNum(monthTotal.errors), monthTotal.errors > 0 ? 'danger' : '');
+      html += card('Расход (оценка)', fmtUSD(tm.estimatedCostUSD), 'accent');
+      html += '</div>';
+
+      html += '<div style="margin-top:18px;">';
+      html += renderProgress('Лимит сообщений в месяц', safe(monthLimits, 'messages.used', 0), safe(monthLimits, 'messages.limit', 0), safe(monthLimits, 'messages.pct', 0));
+      html += renderProgress('Лимит токенов в месяц', safe(monthLimits, 'tokens.used', 0), safe(monthLimits, 'tokens.limit', 0), safe(monthLimits, 'tokens.pct', 0));
+      html += '</div>';
+
+      // ===== Разбивка по каналам (месяц) =====
+      html += '<div class="section-title">Разбивка по каналам (месяц)</div>';
+      html += '<div class="channels-grid">';
+      html += renderChannelTable('🌐 Web', tm.web);
+      html += renderChannelTable('✈️ Telegram', tm.telegram);
+      html += '</div>';
+
+      // ===== Сегодня =====
+      html += '<div class="section-title">Сегодня</div>';
+
+      html += '<div class="subgroup-title">Активность</div>';
+      html += '<div class="cards-grid">';
+      html += card('Сообщений', fmtNum(todayTotal.calls), '');
+      html += card('Входные токены', fmtNum(todayTotal.inputTokens), '');
+      html += card('Исходящие токены', fmtNum(todayTotal.outputTokens), '');
+      html += card('Всего токенов', fmtNum(todayTotal.totalTokens), 'accent');
+      html += '</div>';
+
+      html += '<div class="subgroup-title">Инфо</div>';
+      html += '<div class="cards-grid meta-grid">';
+      html += card('Ошибки', fmtNum(todayTotal.errors), todayTotal.errors > 0 ? 'danger' : '');
+      html += card('Расход (оценка)', fmtUSD(td.estimatedCostUSD), 'accent');
+      html += '</div>';
+
+      html += '<div class="channels-grid" style="margin-top:12px;">';
+      html += renderChannelTable('🌐 Web (сегодня)', td.web);
+      html += renderChannelTable('✈️ Telegram (сегодня)', td.telegram);
+      html += '</div>';
+
+      // ===== Последние 7 дней =====
+      var days = data.last7Days || [];
+      html += '<div class="section-title">Последние 7 дней</div>';
+      if (days.length) {
+        html += '<div class="chart-wrap"><canvas id="daysChart"></canvas></div>';
+        html += '<table class="days-table"><thead><tr>' +
+          '<th>Дата</th><th>Сообщений</th><th>Входные</th><th>Исходящие</th><th>Всего токенов</th><th>Ошибки</th><th>Расход</th>' +
+          '</tr></thead><tbody>';
+        days.slice().reverse().forEach(function(d) {
+          html += '<tr>' +
+            '<td>' + escapeHtml(d.date) + '</td>' +
+            '<td>' + fmtNum(d.messages) + '</td>' +
+            '<td>' + fmtNum(d.inputTokens) + '</td>' +
+            '<td>' + fmtNum(d.outputTokens) + '</td>' +
+            '<td>' + fmtNum(d.totalTokens) + '</td>' +
+            '<td>' + fmtNum(d.errors) + '</td>' +
+            '<td>' + fmtUSD(d.costUSD) + '</td>' +
+            '</tr>';
+        });
+        html += '</tbody></table>';
+      } else {
+        html += '<div class="empty-state">Нет данных за последние 7 дней</div>';
+      }
+
+      // ===== Служебная информация =====
+      html += '<div class="section-title">Служебная информация</div>';
+      html += '<div class="cards-grid">';
+      html += card('Лимит сообщений/мес', fmtNum(lim.messagesPerMonth), '');
+      html += card('Лимит токенов/мес', fmtNum(lim.tokensPerMonth), '');
+      html += card('Цена входа / 1M', '$' + safe(lim, 'costRates.inputPer1M', 0), '');
+      html += card('Цена выхода / 1M', '$' + safe(lim, 'costRates.outputPer1M', 0), '');
+      html += '</div>';
+
+      html += '<details class="raw"><summary>Показать сырой JSON ответа</summary><pre>' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre></details>';
+      html += '<p style="text-align:center;color:#555;font-size:.78rem;margin-top:18px;">Обновлено: ' + escapeHtml(data.generatedAt || '') + '</p>';
+
+      elContent.innerHTML = html;
+
+      if (days.length) {
+        var ctx = document.getElementById('daysChart');
+        var labels = days.map(function(d){ return d.date.slice(5); });
+        var msgData = days.map(function(d){ return d.messages; });
+        var tokData = days.map(function(d){ return d.totalTokens; });
+
+        if (chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              { label: 'Сообщения', data: msgData, backgroundColor: 'rgba(13,110,253,.6)', yAxisID: 'y' },
+              { label: 'Токены', data: tokData, type: 'line', borderColor: '#00e5ff', backgroundColor: 'transparent', yAxisID: 'y1', tension: .3 }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+              y:  { position: 'left',  ticks: { color: '#aaa' }, grid: { color: 'rgba(255,255,255,.05)' } },
+              y1: { position: 'right', ticks: { color: '#00e5ff' }, grid: { display: false } },
+              x:  { ticks: { color: '#aaa' }, grid: { display: false } }
+            },
+            plugins: { legend: { labels: { color: '#ccc' } } }
+          }
+        });
+      }
+    }
+
+    function loadStats() {
+      var workerUrl = elWorkerUrl.value.trim().replace(/\/$/, '');
+      var secret = elSecret.value.trim();
+      var month = elMonth.value.trim();
+
+      if (!workerUrl) { setStatus('err', 'Укажите Worker URL'); return; }
+      if (!secret) { setStatus('err', 'Укажите секретный ключ'); return; }
+
+      save();
+      setStatus('loading', 'Загрузка...');
+      elLoadBtn.disabled = true;
+
+      var url = workerUrl + '/stats?secret=' + encodeURIComponent(secret) + (month ? '&month=' + encodeURIComponent(month) : '');
+
+      fetch(url, { method: 'GET' })
+        .then(function(res) {
+          if (res.status === 401) { throw new Error('Неверный секретный ключ (401)'); }
+          return res.json().then(function(data) {
+            if (!res.ok) { throw new Error((data && data.error) || ('HTTP ' + res.status)); }
+            if (!data.success) { throw new Error(data.error || 'Ошибка ответа сервера'); }
+            return data;
+          });
+        })
+        .then(function(data) {
+          setStatus('ok', 'Данные обновлены ' + new Date().toLocaleTimeString('ru-RU'));
+          renderAll(data);
+        })
+        .catch(function(err) {
+          var msg = err.message || 'не удалось загрузить';
+          if (err.name === 'TypeError' && /fetch/i.test(msg)) {
+            msg = 'Не удалось выполнить запрос. Скорее всего, домен этой страницы (' +
+                  window.location.origin + ') не добавлен в allowedOrigins на воркере.';
+          }
+          setStatus('err', 'Ошибка: ' + msg);
+          elContent.innerHTML = '<div class="empty-state">⚠️ ' + escapeHtml(msg) + '</div>';
+        })
+        .finally(function() { elLoadBtn.disabled = false; });
+    }
+
+    function toggleAuto() {
+      if (elAuto.checked) { autoTimer = setInterval(loadStats, 30000); }
+      else if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    }
+
+    elLoadBtn.addEventListener('click', loadStats);
+    elClearBtn.addEventListener('click', function() {
+      localStorage.removeItem(LS_KEY);
+      elSecret.value = '';
+      setStatus('', 'Данные сброшены');
+      elContent.innerHTML = '';
+    });
+    elAuto.addEventListener('change', toggleAuto);
+    elMonth.addEventListener('change', loadStats);
+    [elWorkerUrl, elSecret].forEach(function(el) {
+      el.addEventListener('keydown', function(e) { if (e.key === 'Enter') loadStats(); });
+    });
+
+    if (elWorkerUrl.value && elSecret.value) { loadStats(); }
+    else { setStatus('', 'Введите Worker URL и секретный ключ'); }
+  })();
+  </script>
+</body>
+</html>
