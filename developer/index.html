@@ -357,9 +357,9 @@
       setStatus('loading', 'Загрузка...');
       elLoadBtn.disabled = true;
 
-      var url = workerUrl + '/stats?secret=' + encodeURIComponent(secret) + (month ? '&month=' + encodeURIComponent(month) : '');
+      var url = workerUrl + '/stats' + (month ? '?month=' + encodeURIComponent(month) : '');
 
-      fetch(url, { method: 'GET' })
+      fetch(url, { method: 'GET', headers: { 'X-Stats-Secret': secret } })
         .then(function(res) {
           if (res.status === 401) { throw new Error('Неверный секретный ключ (401)'); }
           return res.json().then(function(data) {
